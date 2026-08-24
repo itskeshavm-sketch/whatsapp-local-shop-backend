@@ -1,6 +1,6 @@
 import type {
   PaymentService,
-  Subscription,
+  ShopSubscription,
   PaymentIntent,
   Invoice,
   Transaction,
@@ -8,44 +8,51 @@ import type {
 
 /**
  * PaymentServiceStub — stub implementation.
- * All methods return synthetic data until Stripe (via stripe_mcp) is connected.
+ * Reframed for local shops. All methods return synthetic data until payment provider connected.
  */
 export class PaymentServiceStub implements PaymentService {
-  async createSubscription(
-    customerId: string,
+  async setupShopBilling(
+    shopId: string,
     planId: string,
-  ): Promise<Subscription> {
+  ): Promise<ShopSubscription> {
     return {
-		id: "stub-sub-" + Date.now(),
-		customerId,
-		planId,
-		status: "active",
-		currentPeriodStart: new Date(),
-		currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60_000),
+      id: "stub-sub-" + Date.now(),
+      shopId,
+      planId,
+      status: "active",
+      currentPeriodStart: new Date(),
+      currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60_000),
     };
   }
 
-  async processPayment(
+  async processOrderPayment(
     amount: number,
     customerId: string,
+    shopId: string,
     _metadata?: Record<string, unknown>,
   ): Promise<PaymentIntent> {
     return {
       id: "stub-pi-" + Date.now(),
       amount,
       customerId,
+      shopId,
       status: "succeeded",
       currency: "usd",
     };
   }
 
-  async generateInvoice(subscriptionId: string): Promise<Invoice> {
+  async sendInvoiceViaWhatsApp(
+    subscriptionId: string,
+    shopId: string,
+  ): Promise<Invoice> {
     return {
       id: "stub-inv-" + Date.now(),
+      shopId,
       subscriptionId,
       amount: 0,
       status: "draft",
       issuedAt: new Date(),
+      whatsappSent: false,
     };
   }
 

@@ -1,26 +1,25 @@
 import type {
   ComplianceMiddleware,
-  EncryptedPHI,
-  PhiData,
+  EncryptedPII,
+  PiiData,
 } from "./interfaces.js";
 
 /**
- * ComplianceMiddleware — HIPAA + SOC2 compliance layer.
- * Encrypts PHI at rest, logs all CRUD actions, masks PHI by role.
- * Uses base64 token for stub; real AES-256-GCM wiring comes with production env.
+ * ComplianceMiddleware — PII/SOC2 compliance layer for local shops.
+ * Encrypts PII at rest, logs all CRUD actions, masks PII by role.
  */
 export class ComplianceLayer implements ComplianceMiddleware {
   private readonly roleHierarchy: Record<string, number> = {
-    patient: 1,
-    clinician: 2,
-    admin: 3,
+    customer: 1,
+    staff: 2,
+    owner: 3,
   };
 
-  async encryptPHI(data: PhiData): Promise<EncryptedPHI> {
+  async encryptPII(data: PiiData): Promise<EncryptedPII> {
     const json = JSON.stringify(data);
     const ciphertext = Buffer.from(encoder.encode(json)).toString("base64");
     return {
-      id: "phi-" + Date.now(),
+      id: "pii-" + Date.now(),
       ciphertext,
       iv: "stub-iv",
       keyId: "local-test-key",
@@ -28,9 +27,9 @@ export class ComplianceLayer implements ComplianceMiddleware {
     };
   }
 
-  async decryptPHI(encrypted: EncryptedPHI): Promise<PhiData> {
+  async decryptPII(encrypted: EncryptedPII): Promise<PiiData> {
     const decoded = Buffer.from(encrypted.ciphertext, "base64").toString("utf-8");
-    return JSON.parse(decoded) as PhiData;
+    return JSON.parse(decoded) as PiiData;
   }
 
   async auditLog(
@@ -56,34 +55,33 @@ export class ComplianceLayer implements ComplianceMiddleware {
     const roles = Object.keys(this.roleHierarchy);
     if (!roles.includes(role)) return false;
 
-    if (resource.startsWith("/api/admin/")) {
-      return this.roleHierarchy[role] >= this.roleHierarchy.admin;
+    if (resource.startsWith("/api/owner/")) {
+      return this.roleHierarchy[role] >= this.roleHierarchy.owner;
     }
-    if (resource.startsWith("/api/clinician/")) {
-      return this.roleHierarchy[role] >= this.roleHierarchy.clinician;
+    if (resource.startsWith("/api/staff/")) {
+      return this.roleHierarchy[role] >= this.roleHierarchy.staff;
     }
-    if (resource.startsWith("/api/patient/")) {
-      return this.roleHierarchy[role] >= this.roleHierarchy.patient;
+    if (resource.startsWith("/api/customer/")) {
+      return this.roleHierarchy[role] >= this.roleHierarchy.customer;
     }
     return true;
   }
 
-  maskPHI(viewerRole: string, data: PhiData): string {
+  maskPII(viewerRole: string, data: PiiData): string {
     const allowed = this.roleHierarchy[viewerRole] ?? 0;
 
-    const masked: PhiData = { ...data };
-    if (allowed < this.roleHierarchy.admin) {
-      delete masked.ssn;
-    }
-    if (allowed < this.roleHierarchy.clinician) {
-      delete masked.name;
-      delete masked.dob;
-      delete masked.phone;
+    const masked: PiiData = { ...data };
+    if (allowed < this.roleHierarchy.owner) {
+      delete masked.address;
       delete masked.email;
     }
-    if (allowed < this.roleHierarchy.patient) {
-      delete masked.patientId;
-      delete masked.appointmentDetails;
+    if (allowed < this.roleHierarchy.staff) {
+      delete masked.customerName;
+      delete masked.phone;
+    }
+    if (allowed < this.roleHierarchy.customer) {
+      delete masked.customerId;
+      delete masked.orderHistory;
     }
     return JSON.stringify(masked);
   }

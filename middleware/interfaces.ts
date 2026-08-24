@@ -1,15 +1,14 @@
-export interface PhiData {
-  patientId?: string;
-  name?: string;
-  dob?: string;
+export interface PiiData {
+  customerId?: string;
+  customerName?: string;
   phone?: string;
   email?: string;
-  appointmentDetails?: Record<string, unknown>;
-  ssn?: string;
+  address?: string;
+  orderHistory?: Record<string, unknown>[];
   [key: string]: unknown;
 }
 
-export interface EncryptedPHI {
+export interface EncryptedPII {
   id: string;
   ciphertext: string;
   iv: string;
@@ -18,8 +17,8 @@ export interface EncryptedPHI {
 }
 
 export interface ComplianceMiddleware {
-  encryptPHI(data: PhiData): Promise<EncryptedPHI>;
-  decryptPHI(encrypted: EncryptedPHI): Promise<PhiData>;
+  encryptPII(data: PiiData): Promise<EncryptedPII>;
+  decryptPII(encrypted: EncryptedPII): Promise<PiiData>;
   auditLog(
     action: string,
     userId: string,
@@ -28,5 +27,5 @@ export interface ComplianceMiddleware {
     metadata?: Record<string, unknown>,
   ): Promise<void>;
   enforceRole(role: string, resource: string): boolean;
-  maskPHI(viewerRole: string, data: PhiData): string;
+  maskPII(viewerRole: string, data: PiiData): string;
 }

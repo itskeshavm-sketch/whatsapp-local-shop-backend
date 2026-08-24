@@ -1,40 +1,42 @@
-export interface Appointment {
+export type OrderStatus = "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled" | "refunded";
+
+export interface OrderItem {
   id: string;
-  patientId: string;
-  dentistId: string;
-  startTime: Date;
-  endTime: Date;
-  status: "scheduled" | "completed" | "cancelled";
+  productId: string;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+}
+
+export interface Order {
+  id: string;
+  shopId: string;
+  customerId: string;
+  items: OrderItem[];
+  totalAmount: number;
+  status: OrderStatus;
+  createdAt: Date;
+  updatedAt: Date;
   metadata?: Record<string, unknown>;
-  phiEncrypted: boolean;
+  piiEncrypted: boolean;
 }
 
-export interface TimeSlot {
-  id: string;
-  startTime: Date;
-  endTime: Date;
-  dentistId: string;
-  availability: "free" | "booked" | "blocked";
-}
-
-export type FindFreeSlotsFilter = {
-  start: Date;
-  end: Date;
-  dentistId: string;
-};
-
-export interface SchedulingService {
-  createAppointment(
-    patientId: string,
-    slotId: string,
-    dentistId: string,
+export interface OrderManagementService {
+  createOrder(
+    shopId: string,
+    customerId: string,
+    items: OrderItem[],
     metadata?: Record<string, unknown>,
-  ): Promise<Appointment>;
-  listSlots(date: Date, dentistId: string): Promise<TimeSlot[]>;
-  rescheduleAppointment(
-    apptId: string,
-    newSlotId: string,
-  ): Promise<Appointment>;
-  cancelAppointment(apptId: string): Promise<void>;
-  findFreeSlots(filter: FindFreeSlotsFilter): Promise<TimeSlot[]>;
+  ): Promise<Order>;
+  listOrders(
+    shopId: string,
+    filter?: Partial<Order>,
+  ): Promise<Order[]>;
+  updateOrderStatus(orderId: string, status: OrderStatus): Promise<Order>;
+  cancelOrder(orderId: string): Promise<void>;
+  listOrderHistory(
+    customerId: string,
+    limit?: number,
+  ): Promise<Order[]>;
 }

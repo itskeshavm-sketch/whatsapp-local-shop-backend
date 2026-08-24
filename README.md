@@ -1,14 +1,15 @@
-# dental-saas-backend
+# whatsapp-local-shop-backend
 
-Backend API for vertical-specific dental scheduling SaaS (HIPAA + SOC2 compliant).
+Backend API for local shop WhatsApp business automation SaaS (PII/SOC2 compliant).
 
 ## Phase 1 — Stub Implementations
 
-Service interfaces with stub implementations. Real integrations (Google Calendar, Stripe) wired later via COMPOSIO.
+Service interfaces with stub implementations. Real integrations (WhatsApp Business API, payment providers) wired later via COMPOSIO.
 
-- **SchedulingService** — createAppointment, listSlots, reschedule, cancel, findFreeSlots
-- **PaymentService** — createSubscription, processPayment, generateInvoice, listTransactions
-- **ComplianceMiddleware** — encryptPHI, decryptPHI, auditLog, enforceRole, maskPHI
+- **OrderManagementService** — createOrder, listOrders, updateOrderStatus, cancelOrder, listOrderHistory
+- **WhatsAppMessagingService** — sendMessage, sendTemplate, handleIncomingMessage, sendOrderNotification, sendPaymentLink
+- **PaymentService** — setupShopBilling, processOrderPayment, sendInvoiceViaWhatsApp, listTransactions
+- **ComplianceMiddleware** — encryptPII, decryptPII, auditLog, enforceRole, maskPII
 
 ## Run
 
@@ -19,6 +20,6 @@ npm run dev
 
 ## Status
 
-- GitHub repo: https://github.com/itskeshavm-sketch/dental-saas-backend
+- GitHub repo: https://github.com/itskeshavm-sketch/whatsapp-local-shop-backend
 - Only GitHub verified as connected (COMPOSIO)
-- Calendar (Outlook/Google), Stripe NOT yet connected
+- WhatsApp Business API, payment providers NOT yet connected

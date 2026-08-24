@@ -1,6 +1,6 @@
-export interface Subscription {
+export interface ShopSubscription {
   id: string;
-  customerId: string;
+  shopId: string;
   planId: string;
   status: "active" | "canceled" | "past_due";
   currentPeriodStart: Date;
@@ -11,20 +11,24 @@ export interface PaymentIntent {
   id: string;
   amount: number;
   customerId: string;
+  shopId: string;
   status: "succeeded" | "requires_action" | "failed";
   currency: string;
 }
 
 export interface Invoice {
   id: string;
+  shopId: string;
   subscriptionId: string;
   amount: number;
   status: "draft" | "open" | "paid" | "void";
   issuedAt: Date;
+  whatsappSent: boolean;
 }
 
 export interface Transaction {
   id: string;
+  shopId: string;
   customerId: string;
   amount: number;
   status: string;
@@ -32,16 +36,20 @@ export interface Transaction {
 }
 
 export interface PaymentService {
-  createSubscription(
-    customerId: string,
+  setupShopBilling(
+    shopId: string,
     planId: string,
-  ): Promise<Subscription>;
-  processPayment(
+  ): Promise<ShopSubscription>;
+  processOrderPayment(
     amount: number,
     customerId: string,
+    shopId: string,
     metadata?: Record<string, unknown>,
   ): Promise<PaymentIntent>;
-  generateInvoice(subscriptionId: string): Promise<Invoice>;
+  sendInvoiceViaWhatsApp(
+    subscriptionId: string,
+    shopId: string,
+  ): Promise<Invoice>;
   listTransactions(
     filter: Record<string, unknown>,
   ): Promise<Transaction[]>;

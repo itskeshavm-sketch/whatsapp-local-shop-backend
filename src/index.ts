@@ -2,7 +2,8 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 
-import { SchedulingServiceStub } from "../services/SchedulingService.js";
+import { OrderManagementServiceStub } from "../services/OrderManagementService.js";
+import { WhatsAppMessagingServiceStub } from "../services/WhatsAppMessagingServiceStub.js";
 import { PaymentServiceStub } from "../services/PaymentServiceStub.js";
 import { ComplianceLayer } from "../middleware/ComplianceMiddleware.js";
 
@@ -14,7 +15,8 @@ const PORT = process.env.PORT ?? 3001;
 app.use(cors());
 app.use(express.json());
 
-const schedulingService = new SchedulingServiceStub();
+const orderService = new OrderManagementServiceStub();
+const whatsappService = new WhatsAppMessagingServiceStub();
 const paymentService = new PaymentServiceStub();
 const compliance = new ComplianceLayer();
 
@@ -33,29 +35,40 @@ app.use("/api", async (req, res, next) => {
 });
 
 app.get("/api/health", (_req, res) => {
-  res.json({ status: "ok", service: "dental-saas-backend", version: "0.1.0-stub" });
+  res.json({
+    status: "ok",
+    service: "whatsapp-local-shop-backend",
+    version: "0.1.0-stub",
+  });
 });
 
-app.post("/api/appointments", async (req, res) => {
-  const { patientId, slotId, dentistId, metadata } = req.body;
-  const appt = await schedulingService.createAppointment(patientId, slotId, dentistId, metadata);
-  await compliance.auditLog("create_appointment", patientId, "api", appt.id);
-  res.status(201).json(appt);
+app.post("/api/orders", async (req, res) => {
+  const { shopId, customerId, items, metadata } = req.body;
+  const order = await orderService.createOrder(shopId, customerId, items, metadata);
+  await compliance.auditLog("create_order", customerId, "api", order.id);
+  res.status(201).json(order);
 });
 
-app.get("/api/slots", async (req, res) => {
-  const { date, dentistId } = req.query as { date: string; dentistId: string };
-  const slots = await schedulingService.listSlots(new Date(date), dentistId);
-  res.json(slots);
+app.get("/api/orders", async (req, res) => {
+  const { shopId } = req.query as { shopId: string };
+  const orders = await orderService.listOrders(shopId);
+  res.json(orders);
+});
+
+app.post("/api/whatsapp/send", async (req, res) => {
+  const { to, body, metadata } = req.body;
+  const msg = await whatsappService.sendMessage(to, body, metadata);
+  await compliance.auditLog("send_message", "unknown", "api", msg.id);
+  res.status(200).json(msg);
 });
 
 app.post("/api/payments/subscriptions", async (req, res) => {
-  const { customerId, planId } = req.body;
-  const sub = await paymentService.createSubscription(customerId, planId);
-  await compliance.auditLog("create_subscription", customerId, "api", sub.id);
+  const { shopId, planId } = req.body;
+  const sub = await paymentService.setupShopBilling(shopId, planId);
+  await compliance.auditLog("setup_shop_billing", shopId, "api", sub.id);
   res.status(201).json(sub);
 });
 
 app.listen(PORT, () => {
-  console.log(`dental-saas-backend listening on http://localhost:${PORT}`);
+  console.log(`whatsapp-local-shop-backend listening on http://localhost:${PORT}`);
 });

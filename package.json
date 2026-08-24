@@ -1,7 +1,7 @@
 {
-  "name": "dental-saas-backend",
+  "name": "whatsapp-local-shop-backend",
   "version": "0.1.0",
-  "description": "Backend API for vertical-specific dental scheduling SaaS (HIPAA + SOC2 compliant)",
+  "description": "Backend API for local shop WhatsApp business automation SaaS (PII/SOC2 compliant)",
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
@@ -11,7 +11,7 @@
     "lint": "ruff check .",
     "typecheck": "tsc --noEmit"
   },
-  "keywords": ["dental", "scheduling", "saas", "hipaa", "soc2", "workflow-automation"],
+  "keywords": ["whatsapp", "local-shop", "saas", "pii", "soc2", "business-automation"],
   "author": "",
   "license": "MIT",
   "dependencies": {
